@@ -12,9 +12,9 @@ CASES = [
 ] + [("tongue", Path("横纹"), (1830, 650, 3770, 1390))]
 
 
-def local_response(
+def smooth_directions(
     p: np.ndarray, q: np.ndarray, valid: np.ndarray, sigma: float
-) -> np.ndarray:
+) -> tuple:
     margin = int(np.ceil(3 * sigma))
     fields = np.stack((p * valid, q * valid, valid.astype(np.float32)))
     padded = np.pad(fields, ((0, 0), (margin, margin), (margin, margin)), mode="reflect")
@@ -25,7 +25,14 @@ def local_response(
     blurred = np.fft.irfft2(np.fft.rfft2(padded) * kernel, s=(height, width))
     p_sum, q_sum, weight = blurred[:, margin:-margin, margin:-margin]
     denominator = np.maximum(weight, 1e-6)
-    corrected = np.hypot(p - p_sum / denominator, q - q_sum / denominator)
+    return p_sum / denominator, q_sum / denominator
+
+
+def local_response(
+    p: np.ndarray, q: np.ndarray, valid: np.ndarray, sigma: float
+) -> np.ndarray:
+    p_background, q_background = smooth_directions(p, q, valid, sigma)
+    corrected = np.hypot(p - p_background, q - q_background)
     return np.where(valid, corrected, 0).astype(np.float32)
 
 
