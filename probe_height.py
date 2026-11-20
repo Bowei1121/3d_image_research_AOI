@@ -22,12 +22,16 @@ def crop(path: Path, box: tuple, mode: str) -> np.ndarray:
         return np.asarray(image.crop(box).convert(mode))
 
 
-def load_capture(folder: Path, box: tuple) -> tuple:
+def load_frames(folder: Path, box: tuple) -> np.ndarray:
     paths = sorted(folder.glob("Image_*.bmp"))
     if len(paths) != 4:
         raise ValueError(f"{folder} 需要四張 Image_*.bmp")
 
-    frames = np.stack([crop(path, box, "L") for path in paths])
+    return np.stack([crop(path, box, "L") for path in paths])
+
+
+def load_capture(folder: Path, box: tuple) -> tuple:
+    frames = load_frames(folder, box)
     height = crop(bitmap(folder, "相对高度"), box, "L")
     color = crop(bitmap(folder, "彩色融合"), box, "RGB")
     return frames, height, color
