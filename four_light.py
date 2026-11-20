@@ -25,6 +25,10 @@ def signed_preview(response: np.ndarray) -> np.ndarray:
     return np.rint(127.5 + 127.5 * np.clip(response / 0.25, -1, 1)).astype(np.uint8)
 
 
+def map_vendor_max(peak: np.ndarray) -> np.ndarray:
+    return np.floor(48.158 + 0.71357 * peak).astype(np.uint8)
+
+
 def compare_vendor(
     folder: Path,
     mapped_max: np.ndarray,
@@ -85,7 +89,7 @@ def main() -> None:
     response_24 = opposite_response(i2, i4)
     peak = np.maximum.reduce(images)
     valid = (np.minimum.reduce(images) >= 4) & (peak < 250)
-    mapped_max = np.floor(48.158 + 0.71357 * peak).astype(np.uint8)
+    mapped_max = map_vendor_max(peak)
 
     if args.compare_vendor:
         try:
